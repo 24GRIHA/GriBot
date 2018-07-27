@@ -1,0 +1,48 @@
+// ==UserScript==
+// @name         Голосовой поиск
+// @namespace    http://tampermonkey.net/
+// @version      0.1
+// @author       agran
+// @include      https://www.google.ru/*
+// @require      http://code.jquery.com/jquery-latest.js
+// ==/UserScript==
+/* jshint -W097 */
+'use strict';
+
+var script1 = false;
+var intervalvar;
+
+(function (window, undefined) {
+
+	if (window.self != window.top) {
+		return;
+	}
+	
+	$( document ).ready(function() {
+		intervalvar = setInterval(Intervalfun, 300);
+	});
+    
+})(window);
+
+function Intervalfun ()
+{
+
+	// #spchf - содержит текст распознанный с микрофона
+	// #spch - панель с приглашением говорить
+	// #gsri_ok0 - кнопка, нажав на которую включается запись распознавания
+	// voice - хештег при наличии которого в адресе скрипт срабатывает, что бы не мешать пользоваться google в других ситуациях
+	
+	if (/voice/.test(window.location.hash) && (($("#spchf").html() == '') && !$("#spch").is(':visible'))) {
+		$("#gsri_ok0").click();
+		script1 = true;
+	}
+	
+	// $(".r").find("a").attr('href') - ссылка с первым результатом поиска
+	// script1 - переменная по которой скрипт понимает что это он работает, по хештегу проверить уже нельзя так как по ходу работы Гугла URL меняется.
+	
+	if (script1 && $("#spchf").html() != '' && $(".r").find("a").attr('href') != '') {
+		window.open($(".r").find("a").attr('href'), "_self");
+		clearInterval(intervalvar);
+		intervalvar = setInterval(Intervalfun, 2000); // Даём время скрипту открыть новую страницу, через две секунды снова попробует если Гугл ещё будет открыт.
+	}
+} 
